@@ -1,0 +1,6 @@
+; $Id$
+name = Patron Comments
+version = 6.x-1.0-dev
+description = Enables Patron Comments and Comment Management Tools
+core = 6.x
+package = "AADL Modules"

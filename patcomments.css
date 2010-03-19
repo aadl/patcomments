@@ -1,0 +1,22 @@
+div#filter_form {
+  border: 1px solid black;
+  margin: 5px;
+  padding: 5px;
+  background: #D8D6B2;
+}
+div#filter_form * {
+  display: inline;
+}
+div#filter_form div.form-item br {
+  display: none;
+}
+div#filter_form div.form-item select option {
+  display: block;
+}
+div#filter_form *#edit-patcomments-filter-form {
+  display: none;
+}
+div#filter_form .form-submit{
+  background: #FFFFFF;
+  vertical-align: middle;
+}
