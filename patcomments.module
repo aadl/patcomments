@@ -139,6 +139,8 @@ function patcomments_admin() {
     $sql .= ' AND status = ' . $_COOKIE['patcomments_filter_status'];
   if ($_COOKIE['patcomments_filter_refer'] != "")
     $sql .= ' AND refer_to = ' . $_COOKIE['patcomments_filter_refer'];
+  if ($_COOKIE['patcomments_filter_number'] != "")
+    $sql .= ' AND com_id LIKE "' . $_COOKIE['patcomments_filter_number'] . '%"';
 
   $header = array(
     array('data' => t('id'), 'field' => 'com_id', 'sort' => 'desc'),
@@ -185,7 +187,6 @@ function patcomments_admin() {
   if (!$rows) {
     $rows[] = array(array('data' => t('No Patron Comments available.'), 'colspan' => '9'));
   }
-
   $filter_form = "<div id=\"filter_form\">" .
                  drupal_get_form('patcomments_filter_form', $comment_types, $comment_status, $comment_refer) .
                  "</div>";
@@ -211,6 +212,10 @@ function patcomments_filter_form($form_state, $comment_types, $comment_status, $
                                 '#title' => "Refer",
                                 '#default_value' => $_COOKIE['patcomments_filter_refer'],
                                 '#options' => $comment_refer);
+  $form["filter_number"] = array('#type' => 'textfield',
+                                '#title' => "ID",
+                                '#default_value' => $_COOKIE['patcomments_filter_number'],
+                                '#size' => "10");
   $form["filter_submit"] = array('#type' => 'submit',
                                  '#value' => "Filter");
   return $form;
@@ -222,6 +227,7 @@ function patcomments_filter_form_submit($form, &$form_state)
   setcookie("patcomments_filter_type", $form_state['values']['filter_type'], $timeout);
   setcookie("patcomments_filter_status", $form_state['values']['filter_status'], $timeout);
   setcookie("patcomments_filter_refer", $form_state['values']['filter_refer'], $timeout);
+  setcookie("patcomments_filter_number", $form_state['values']['filter_number'], $timeout);
 }
 
 /**
