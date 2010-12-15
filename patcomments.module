@@ -170,7 +170,7 @@ function patcomments_admin() {
   foreach ($refers as $refer) {
     $comment_refer[$refer['ref_id']] = $refer['refer_to'];
   }
-  
+
   $comment_source = _patcomments_get_sources();
 
   $comment_publish = array(0 => "No", 1 => "Yes");
@@ -738,6 +738,7 @@ function patcomments_form($form_state, $pathCode = NULL) {
     $content .='<p><strong>Our mailing address is: 343 South Fifth Avenue, Ann Arbor, MI 48104</strong></p>';
     $content .='<p>Material requests and renewals: (734) 327-4219<br>
                 Reference desk: (734) 327-4525<br>
+                Washtenaw Library for the Blind and Physically Disabled: (734) 327-4224<br>
                 Human Resources: (734) 327-8304<br>
                 Community Relations (programs and events): (734) 327-4265<br>
                 Administration, Josie Parker, Library Director: (734) 327-4263</p>';
