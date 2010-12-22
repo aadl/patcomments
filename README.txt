@@ -70,5 +70,5 @@ You'll need to set your Institution name and suggestion reply email address at '
 
 /* == CONTACT INFO == */
 
-Maintainer: Eric J. Klooster (ejk@aadl.org, twitter: @ejk)
-Administrator: Eli Neiburger (eli@aadl.org)
+Maintainer: Eric J. Klooster (ejk [at] aadl.org, twitter: @ejk)
+Administrator: Eli Neiburger (eli [at] aadl.org)
