@@ -23,6 +23,14 @@ function patcomments_perm() {
 function patcomments_menu() {
   $items = array();
 
+  $items['admin/settings/contactus'] = array(
+    'title' => t('Contact Us Settings'),
+    'description' => 'Settings for Contact US',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('patcomments_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
   $items['admin/contactus'] = array(
     'title' => 'Contact Us',
     'description' => 'View, plublish, and respond to Patron Comments.',
@@ -124,6 +132,26 @@ function patcomments_menu() {
   );
 
   return $items;
+}
+
+function patcomments_settings() {
+  $form['patcomments_institution_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Institution Name"),
+    '#default_value' => variable_get('patcomments_institution_name', NULL),
+    '#size' => 64,
+    '#maxlength' => 256,
+    '#description' => t("Short name of the Institution, e.g. AADL"),
+  );
+  $form['patcomments_suggest_email'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Suggest Email"),
+    '#default_value' => variable_get('patcomments_suggest_email', NULL),
+    '#size' => 64,
+    '#maxlength' => 256,
+    '#description' => t("Email address for the automatic response on suggestions"),
+  );
+  return system_settings_form($form);
 }
 
 /**
@@ -395,11 +423,11 @@ function patcomments_admin_form($form_state, $edit = '') {
   );
   $form['notes'] = array(
     '#type' => 'textarea',
-    '#title' => t('AADL Reply'),
+    '#title' => variable_get('patcomments_institution_name', NULL) . ' ' . t('Reply'),
     '#default_value' => $edit['notes'],
     '#cols' => 60,
     '#rows' => 10,
-    '#description' => t('Write AADL Reply'),
+    '#description' => t('Write') . ' ' . variable_get('patcomments_institution_name', NULL) . ' ' . t('Reply'),
   );
   $form['email_patron'] = array(
     '#type' => 'submit',
@@ -491,7 +519,7 @@ function patcomments_admin_form_submit($form, &$form_state)
     db_query("UPDATE comment SET date_resolved = '%s', status = %d WHERE com_id = %d", $todays_date, $status_code, $com_id);
     db_set_active('default');
 
-    $email_from = (trim($form_state['values']['email_from']) ? trim($form_state['values']['email_from']) : "suggestions@aadl.org");
+    $email_from = (trim($form_state['values']['email_from']) ? trim($form_state['values']['email_from']) : variable_get('patcomments_suggest_email', NULL));
     patcomments_email_status($com_id, 'patron', $email_from);
 
     drupal_set_message(t('Patron Email Sent. Status set to Closed. Ready for redaction before publish'));
@@ -527,7 +555,7 @@ function patcomments_admin_update($edit, $return_to_overview = TRUE) {
            $edit['refer_to'], $edit['publish'], $edit['com_id']);
   db_set_active('default');
 
-  $email_from = (trim($edit['email_from']) ? trim($edit['email_from']) : "suggestions@aadl.org");
+  $email_from = (trim($edit['email_from']) ? trim($edit['email_from']) : variable_get('patcomments_suggest_email', NULL));
 
   if ($edit['refer_to'] != $edit['refer_to_orig'])
     patcomments_email_status($edit['com_id'], 'staff', $email_from);
@@ -553,7 +581,7 @@ function patcomments_admin_insert($edit, $return_to_overview = TRUE){
 
   $edit['com_id'] = mysql_insert_id();
 
-  $email_from = (trim($edit['email_from']) ? trim($edit['email_from']) : "suggestions@aadl.org");
+  $email_from = (trim($edit['email_from']) ? trim($edit['email_from']) : variable_get('patcomments_suggest_email', NULL));
 
   if ($edit['send_email'] == 1)
     patcomments_email_status($edit['com_id'], 'patron', $email_from);
@@ -569,14 +597,19 @@ function patcomments_admin_insert($edit, $return_to_overview = TRUE){
 /**
  * Send an email with a comment's status
  */
-function patcomments_email_status($com_id, $to_whom = 'staff', $email_from = 'suggestions@aadl.org')
+function patcomments_email_status($com_id, $to_whom = 'staff', $email_from = '')
 {
+  if (empty($email_from))
+  {
+    $email_from = variable_get('patcomments_suggest_email', NULL);
+  }
+  
   $comment_data = patcomments_load($com_id);
 
   // Get Feedback Type
   db_set_active('patcomments');
   $row = db_fetch_object(db_query("SELECT * FROM type WHERE ty_id = %d", $comment_data['type']));
-  $email_subject = "AADL Patron Comment Update: " . $row->type . " ($com_id)";
+  $email_subject = variable_get('patcomments_institution_name', NULL) . " Patron Comment Update: " . $row->type . " ($com_id)";
   db_set_active('default');
 
   $email_message = "\n" . str_pad(" $com_id Patron Comments ", 40, "-", STR_PAD_BOTH) . "\n";
@@ -646,7 +679,7 @@ function patcomments_display($regarding = 0, $type = 0, $num_per_page = 10) {
   drupal_add_css(drupal_get_path('module', 'patcomments') . '/patcomments.css', 'module', 'all', FALSE);
 
   $content = "<h2 class=\"title\">What you have told us</h2>" .
-  $content .= "<p>Here you can search through numerous patron comments and the corresponding AADL replies. ";
+  $content .= "<p>Here you can search through numerous patron comments and the corresponding " . variable_get('patcomments_institution_name', NULL) . " replies. ";
   $content .= "Search by the type of comment, in general by what the comment is regarding, or by a particular issue.</p>";
   $content .= "<p>We care about what you have to say, and do our best to address each and every concern.</p>";
   $content .= "<p>Please let us know how we're doing by " . l("submitting a comment or suggestion", "contactus") . "</p>";
@@ -681,7 +714,7 @@ function patcomments_display($regarding = 0, $type = 0, $num_per_page = 10) {
                 "<strong>Type: </strong>" . $comment_types[$data->type]['type'] . "<br />" .
                 "<strong>Regarding: </strong>" . $comment_regardings[$data->regarding] . "<br />" .
                 "<p><strong>Patron Comment: </strong>" . $data->comments . "</p>" .
-                "<p><strong>AADL Reply: </strong>" . $data->notes . "</p><hr>";
+                "<p><strong>" . variable_get('patcomments_institution_name', NULL) . " Reply: </strong>" . $data->notes . "</p><hr>";
   }
 
   $content .= theme('pager', NULL, 10, 0);
@@ -1040,13 +1073,13 @@ function patcomments_form_submit($form, &$form_state) {
   db_set_active('default');
 
   // Form Email to Assigned Staff
-  $email_from = ($input_email ? $input_email : "suggestions@aadl.org");
+  $email_from = ($input_email ? $input_email : variable_get('patcomments_suggest_email', NULL));
   patcomments_email_status($new_com_id, $email_to, $email_from);
 
   // Output a confirmation message
   $content .= "<p>Thanks for contacting us. Your comment has been received and routed to the appropriate person.</p>";
   $content .= "<p>If you provided contact information, you will receive a response soon.</p>";
-  $content .= "<p>" . l("Return to the aadl.org home page", "") . "</p>";
+  $content .= "<p>" . l("Return to the home page", "") . "</p>";
 
   drupal_set_message(t($content));
 }
