@@ -249,8 +249,7 @@ function patcomments_filter_form($form_state, $comment_types, $comment_status, $
   return $form;
 }
 
-function patcomments_filter_form_submit($form, &$form_state)
-{
+function patcomments_filter_form_submit($form, &$form_state) {
   $timeout = time()+60*60*24*30;
   setcookie("patcomments_filter_type", $form_state['values']['filter_type'], $timeout);
   setcookie("patcomments_filter_status", $form_state['values']['filter_status'], $timeout);
@@ -261,11 +260,11 @@ function patcomments_filter_form_submit($form, &$form_state)
 /**
  * Menu callback; handles pages for creating and editing patron comments.
  */
-function patcomments_admin_edit($com_id = 0)
-{
+function patcomments_admin_edit($com_id = 0) {
   if ($com_id) {
     $output = drupal_get_form('patcomments_admin_form', patcomments_load($com_id));
-  } else {
+  }
+  else {
     $output = drupal_get_form('patcomments_admin_form');
   }
   return $output;
@@ -278,7 +277,7 @@ function patcomments_admin_delete($com_id = 0, $confirm = "NO") {
   $patcomment = patcomments_load($com_id);
 
   if ($patcomment['com_id']) {
-    if($confirm == "CONFIRMED") {
+    if ($confirm == "CONFIRMED") {
       db_set_active('patcomments');
       db_query('DELETE FROM {comment} WHERE com_id = %d', $com_id);
       db_set_active('default');
@@ -500,7 +499,8 @@ function patcomments_admin_form_submit($form, &$form_state)
       // Existing Comment
       patcomments_admin_update($form_state['values'], FALSE);
       $com_id = $form_state['values']['com_id'];
-    } else {
+    }
+    else {
       // New Comment
       patcomments_admin_insert($form_state['values'], FALSE);
       $com_id = mysql_insert_id();
@@ -524,9 +524,11 @@ function patcomments_admin_form_submit($form, &$form_state)
 
     drupal_set_message(t('Patron Email Sent. Status set to Closed. Ready for redaction before publish'));
     drupal_goto('admin/contactus/edit/' . $com_id);
-  } else if ($_POST['op'] == t('Update Comment')) {
+  }
+  else if ($_POST['op'] == t('Update Comment')) {
     $output = patcomments_admin_update($form_state['values']);
-  } else if ($_POST['op'] == t('Create new Comment')){
+  }
+  else if ($_POST['op'] == t('Create new Comment')){
     $output = patcomments_admin_insert($form_state['values']);
   }
 }
@@ -562,14 +564,15 @@ function patcomments_admin_update($edit, $return_to_overview = TRUE) {
 
   cache_clear_all();
   drupal_set_message(t('The Patron Comment has been updated.'));
-  if ($return_to_overview)
+  if ($return_to_overview) {
     drupal_goto('admin/contactus');
+  }
 }
 
 /**
  * insert record.
  */
-function patcomments_admin_insert($edit, $return_to_overview = TRUE){
+function patcomments_admin_insert($edit, $return_to_overview = TRUE) {
   db_set_active('patcomments');
   db_query("INSERT INTO {comment} (type, source, location, staff, regarding, comments, name, address, city, state, zip, phone, " .
            "email, date_received, status, date_resolved, notes, web_info, refer_to, publish) " .
@@ -583,27 +586,28 @@ function patcomments_admin_insert($edit, $return_to_overview = TRUE){
 
   $email_from = (trim($edit['email_from']) ? trim($edit['email_from']) : variable_get('patcomments_suggest_email', NULL));
 
-  if ($edit['send_email'] == 1)
+  if ($edit['send_email'] == 1) {
     patcomments_email_status($edit['com_id'], 'patron', $email_from);
-  if ($edit['refer_to'] != $edit['refer_to_orig'])
+  }
+  if ($edit['refer_to'] != $edit['refer_to_orig']) {
     patcomments_email_status($edit['com_id'], 'staff', $email_from);
+  }
 
   cache_clear_all();
   drupal_set_message(t('The Patron Comment #' . $edit['com_id'] . ' has been added.'));
-  if ($return_to_overview)
+  if ($return_to_overview) {
     drupal_goto('admin/contactus');
+  }
 }
 
 /**
  * Send an email with a comment's status
  */
-function patcomments_email_status($com_id, $to_whom = 'staff', $email_from = '')
-{
-  if (empty($email_from))
-  {
+function patcomments_email_status($com_id, $to_whom = 'staff', $email_from = '') {
+  if (empty($email_from)) {
     $email_from = variable_get('patcomments_suggest_email', NULL);
   }
-  
+
   $comment_data = patcomments_load($com_id);
 
   // Get Feedback Type
@@ -614,8 +618,7 @@ function patcomments_email_status($com_id, $to_whom = 'staff', $email_from = '')
 
   $email_message = "\n" . str_pad(" $com_id Patron Comments ", 40, "-", STR_PAD_BOTH) . "\n";
 
-  if ($to_whom == 'staff' || strpos($to_whom, "@"))
-  {
+  if ($to_whom == 'staff' || strpos($to_whom, "@")) {
     $email_message .= "\nOpen the following link to administer:\n" .
                       url("admin/contactus/edit/$com_id", array('absolute' => TRUE)) .
                       "\n\n" . str_pad("", 40, "-") . "\n\n";
@@ -626,11 +629,9 @@ function patcomments_email_status($com_id, $to_whom = 'staff', $email_from = '')
                            "status:status:stat_id" => "status",
                            "refer_to:refer_comment:ref_id" => "refer_to");
 
-    foreach($comment_data as $field => $field_data)
-    {
+    foreach($comment_data as $field => $field_data) {
       $lookup_code = array_search($field, $lookup_fields);
-      if ($lookup_code)
-      {
+      if ($lookup_code) {
         $sql_fields = explode(":", $lookup_code);
         db_set_active('patcomments');
         $row = db_fetch_array(db_query("SELECT %s FROM %s WHERE %s = %d", $sql_fields[0], $sql_fields[1], $sql_fields[2], $field_data));
@@ -646,17 +647,14 @@ function patcomments_email_status($com_id, $to_whom = 'staff', $email_from = '')
     // Get referal email address
     if (strpos($to_whom, "@"))
       $email_to = $to_whom;
-    else
-    {
+    else {
       db_set_active('patcomments');
       $row = db_fetch_object(db_query("SELECT * FROM refer_comment WHERE ref_id=%d", $comment_data['refer_to']));
       $email_to = $row->refer_value;
       db_set_active('default');
     }
-
   }
-  else
-  {
+  else {
     $email_to = $comment_data['email'];
 
     $email_message .= "\n" . $comment_data['comments'] .
@@ -844,17 +842,20 @@ function patcomments_form($form_state, $pathCode = NULL) {
       );
       $contact_form .= $suggest_select . '<br />';
     }
-  } else {
+  }
+  else {
     db_set_active('patcomments');
     $result = db_query("SELECT * FROM type WHERE pub_display = 1 ORDER BY type ASC");
     db_set_active('default');
 
     $ty_options = array("" => "- CHOOSE TYPE -");
     while ($row = db_fetch_object($result)) {
-      if ($row->type != "other") // put other at the end
+      if ($row->type != "other")  { // put other at the end
         $ty_options[$row->ty_id] = $row->type;
-      else
+      }
+      else {
         $other_option = array($row->ty_id => $row->type);
+      }
     }
     $ty_options = $ty_options + $other_option;
 
@@ -874,10 +875,12 @@ function patcomments_form($form_state, $pathCode = NULL) {
 
     $sug_options = array("" => "- CHOOSE CATEGORY -");
     while ($row = db_fetch_object($result)) {
-      if ($row->description != "Other") // put other at the end
+      if ($row->description != "Other") { // put other at the end
         $sug_options[$row->id] = $row->description;
-      else
+      }
+      else {
         $other_option = array($row->id => $row->description);
+      }
     }
     $sug_options = $sug_options + $other_option;
 
@@ -947,12 +950,15 @@ function theme_patcomments_form($form) {
 }
 
 function patcomments_form_validate($form, &$form_state) {
-  if (!valid_email_address($form_state['values']['email']))
+  if (!valid_email_address($form_state['values']['email'])) {
     form_set_error('email', t('Invalid email entered, please correct.'));
-  if (strpos($form_state['values']['comment'], "a href"))
+  }
+  if (strpos($form_state['values']['comment'], "a href")) {
     form_set_error('comment', t('Sorry, no HTML links are allowed in your comment'));
-  if (empty($form_state['values']['ty_id']))
+  }
+  if (empty($form_state['values']['ty_id'])) {
     form_set_error('ty_id', t('Please select a Comment Type'));
+  }
 }
 
 function patcomments_form_submit($form, &$form_state) {
@@ -992,7 +998,8 @@ function patcomments_form_submit($form, &$form_state) {
     db_set_active('patcomments');
     $row = db_fetch_object(db_query("SELECT stat_id FROM status WHERE status = 'AutoClose'"));
     db_set_active('default');
-  } else {
+  }
+  else {
     db_set_active('patcomments');
     $row = db_fetch_object(db_query("SELECT stat_id FROM status WHERE status = 'New'"));
     db_set_active('default');
@@ -1056,7 +1063,8 @@ function patcomments_form_submit($form, &$form_state) {
       $input_comments = "NOTICE: THIS COMMENT IS AUTO-CLOSED AND AN AUTOMATIC REPLY HAS BEEN SENT TO THE SUGGESTER\n" .
                         "-----------------------------------------------------------------------------------------\n\n" .
                         $input_comments;
-    } else {
+    }
+    else {
       $input_comments = "WARNING: THIS COMMENT IS AUTO-CLOSED, BUT WAS SUBMITTED WITHOUT A VALID RETURN EMAIL\n" .
                         "------------------------------------------------------------------------------------\n\n" .
                         $input_comments;
