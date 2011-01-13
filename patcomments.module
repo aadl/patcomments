@@ -161,14 +161,14 @@ function patcomments_admin() {
   drupal_add_css(drupal_get_path('module', 'patcomments') . '/patcomments.css', 'module', 'all', FALSE);
 
   $sql = 'SELECT * FROM {comment} WHERE 1';
-  if ($_GET['type'] != "")
-    $sql .= ' AND type = ' . $_GET['type'];
-  if ($_GET['status'] != "")
-    $sql .= ' AND status = ' . $_GET['status'];
-  if ($_GET['refer'] != "")
-    $sql .= ' AND refer_to = ' . $_GET['refer'];
-  if ($_GET['number'] != "")
-    $sql .= ' AND com_id LIKE "' . $_GET['number'] . '%"';
+  if ($_GET['type'])
+    $sql .= ' AND type = ' . intval($_GET['type']);
+  if ($_GET['status'])
+    $sql .= ' AND status = ' . intval($_GET['status']);
+  if ($_GET['refer'])
+    $sql .= ' AND refer_to = ' . intval($_GET['refer']);
+  if ($_GET['number'])
+    $sql .= ' AND com_id LIKE "' . intval($_GET['number']) . '%"';
 
   $header = array(
     array('data' => t('id'), 'field' => 'com_id', 'sort' => 'desc'),
@@ -230,19 +230,19 @@ function patcomments_filter_form($form_state, $comment_types, $comment_status, $
 
   $form["filter_type"] = array('#type' => 'select',
                                '#title' => "Type",
-                               '#default_value' => $_GET['type'],
+                               '#default_value' => intval($_GET['type']),
                                '#options' => $comment_types);
   $form["filter_status"] = array('#type' => 'select',
                                  '#title' => "Status",
-                                 '#default_value' => $_GET['status'],
+                                 '#default_value' => intval($_GET['status']),
                                  '#options' => $comment_status);
   $form["filter_refer"] = array('#type' => 'select',
                                 '#title' => "Refer",
-                                '#default_value' => $_GET['refer'],
+                                '#default_value' => intval($_GET['refer']),
                                 '#options' => $comment_refer);
   $form["filter_number"] = array('#type' => 'textfield',
                                 '#title' => "ID",
-                                '#default_value' => $_GET['number'],
+                                '#default_value' => intval($_GET['number']),
                                 '#size' => "10");
   $form["filter_submit"] = array('#type' => 'submit',
                                  '#value' => "Filter");
