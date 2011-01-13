@@ -158,17 +158,24 @@ function patcomments_settings() {
  * Return a listing of all patron comments.
  */
 function patcomments_admin() {
+  global $user;
   drupal_add_css(drupal_get_path('module', 'patcomments') . '/patcomments.css', 'module', 'all', FALSE);
 
+  list($type, $status, $refer, $number) = explode(',', variable_get('patcomments_filter_vars_' . $user->uid, NULL));
+
   $sql = 'SELECT * FROM {comment} WHERE 1';
-  if ($_GET['type'])
-    $sql .= ' AND type = ' . intval($_GET['type']);
-  if ($_GET['status'])
-    $sql .= ' AND status = ' . intval($_GET['status']);
-  if ($_GET['refer'])
-    $sql .= ' AND refer_to = ' . intval($_GET['refer']);
-  if ($_GET['number'])
-    $sql .= ' AND com_id LIKE "' . intval($_GET['number']) . '%"';
+  if ($type) {
+    $sql .= ' AND type = ' . $type;
+  }
+  if ($status) {
+    $sql .= ' AND status = ' . $status;
+  }
+  if ($refer) {
+    $sql .= ' AND refer_to = ' . $refer;
+  }
+  if ($number) {
+    $sql .= ' AND com_id LIKE "' . $number . '%"';
+  }
 
   $header = array(
     array('data' => t('id'), 'field' => 'com_id', 'sort' => 'desc'),
@@ -223,47 +230,44 @@ function patcomments_admin() {
 }
 
 function patcomments_filter_form($form_state, $comment_types, $comment_status, $comment_refer) {
-  $all_option = array("" => "All");
+  global $user;
+
+  $all_option = array("All");
   $comment_types = $all_option + $comment_types;
   $comment_status = $all_option + $comment_status;
   $comment_refer = $all_option + $comment_refer;
 
-  $form["filter_type"] = array('#type' => 'select',
+  list($default_type, $default_status, $default_refer, $default_number) = explode(',', variable_get('patcomments_filter_vars_' . $user->uid, NULL));
+
+  $form['filter_type'] = array('#type' => 'select',
                                '#title' => "Type",
-                               '#default_value' => intval($_GET['type']),
+                               '#default_value' => $default_type,
                                '#options' => $comment_types);
-  $form["filter_status"] = array('#type' => 'select',
+  $form['filter_status'] = array('#type' => 'select',
                                  '#title' => "Status",
-                                 '#default_value' => intval($_GET['status']),
+                                 '#default_value' => $default_status,
                                  '#options' => $comment_status);
-  $form["filter_refer"] = array('#type' => 'select',
+  $form['filter_refer'] = array('#type' => 'select',
                                 '#title' => "Refer",
-                                '#default_value' => intval($_GET['refer']),
+                                '#default_value' => $default_refer,
                                 '#options' => $comment_refer);
-  $form["filter_number"] = array('#type' => 'textfield',
+  $form['filter_number'] = array('#type' => 'textfield',
                                 '#title' => "ID",
-                                '#default_value' => intval($_GET['number']),
+                                '#default_value' => $default_number ? $default_number : '',
                                 '#size' => "10");
-  $form["filter_submit"] = array('#type' => 'submit',
+  $form['filter_submit'] = array('#type' => 'submit',
                                  '#value' => "Filter");
   return $form;
 }
 
 function patcomments_filter_form_submit($form, &$form_state) {
-  $query = array();
-  if ($form_state['values']['filter_type']) {
-    $query['type'] = $form_state['values']['filter_type'];
-  }
-  if ($form_state['values']['filter_status']) {
-    $query['status'] = $form_state['values']['filter_status'];
-  }
-  if ($form_state['values']['filter_refer']) {
-    $query['refer'] = $form_state['values']['filter_refer'];
-  }
-  if ($form_state['values']['filter_number']) {
-    $query['number'] = $form_state['values']['filter_number'];
-  }
-  drupal_goto($_GET['q'], $query);
+  global $user;
+
+  variable_set('patcomments_filter_vars_' . $user->uid,
+               intval($form_state['values']['filter_type']) . ',' .
+               intval($form_state['values']['filter_status']) . ',' .
+               intval($form_state['values']['filter_refer']) . ',' .
+               intval($form_state['values']['filter_number']));
 }
 
 /**
