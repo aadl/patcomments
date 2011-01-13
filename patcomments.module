@@ -829,7 +829,7 @@ function patcomments_form($form_state, $pathCode = NULL) {
 
     if ($row->ty_id == $suggest_item_type) {
       db_set_active('patcomments');
-      $result = db_query("SELECT * FROM suggest_categories");
+      $result = db_query("SELECT * FROM suggest_categories ORDER by suggest_categories.description ASC");
       db_set_active('default');
 
       $sug_options = array("" => "- CHOOSE CATEGORY -");
@@ -879,7 +879,7 @@ function patcomments_form($form_state, $pathCode = NULL) {
     $contact_form .= '<br />';
 
     db_set_active('patcomments');
-    $result = db_query("SELECT * FROM suggest_categories");
+    $result = db_query("SELECT * FROM suggest_categories ORDER by suggest_categories.description ASC");
     db_set_active('default');
 
     $sug_options = array("" => "- CHOOSE CATEGORY -");
